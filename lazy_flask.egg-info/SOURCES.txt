@@ -1,3 +1,4 @@
+LICENSE
 README.md
 setup.py
 lazy_flask/__init__.py
@@ -6,3 +7,4 @@ lazy_flask.egg-info/SOURCES.txt
 lazy_flask.egg-info/dependency_links.txt
 lazy_flask.egg-info/requires.txt
 lazy_flask.egg-info/top_level.txt
+tests/test_function.py

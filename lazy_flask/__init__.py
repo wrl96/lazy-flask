@@ -1,182 +1,190 @@
 # coding=utf-8
-
 import json
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Any
-from flask import Flask, request as flask_request
+from functools import wraps
+from typing import (Any, Callable, Dict, List, Optional, Union, ClassVar)
+from flask import Flask, request as flask_request, Response as FlaskResponse
 
-MiddlewareType = Enum('MiddlewareType', ('Request', 'Response'))
+
+class MiddlewareType(Enum):
+    Request = 'Request'
+    Response = 'Response'
 
 
+@dataclass
 class Middleware:
+    func: Callable[[Any], Any]
+    tag: Optional[str] = None
+    weight: int = 0
+    m_type: MiddlewareType = MiddlewareType.Request
 
-    func = Callable
-    tag = str
-    weight = int
-    type = MiddlewareType
 
-    def __init__(
-            self,
-            func: Callable,
-            tag: str = None,
-            weight: int = 0,
-            m_type: MiddlewareType = MiddlewareType.Request
-    ):
-        self.func = func
-        self.tag = tag
-        self.weight = weight
-        self.type = m_type
+@dataclass
+class ModuleFunction:
+    func: Callable
+    tags: Optional[List[str]] = None
 
 
 class Module:
-    name = str
-    __registered_function = bool
-    __middleware = dict
-    __function = dict
 
     def __init__(self, name: str):
         self.name = name
-        self.__middleware = {
-            '': list()
-        }
-        self.__function = dict()
-        self.__registered_function = False
+        self._middleware: Dict[Optional[str], List[Middleware]] = {None: []}
+        self._functions: Dict[str, ModuleFunction] = {}
+        self._functions_registered = False
 
     def register_middleware(self, middleware: Middleware) -> None:
-        if self.__registered_function:
-            raise Exception('Can\'t register middleware after called function')
-        if middleware.tag is None:
-            self.__middleware[''].append(middleware)
-        else:
-            if middleware.tag not in self.__middleware.keys():
-                self.__middleware[middleware.tag] = list()
-            self.__middleware[middleware.tag].append(middleware)
+        if self._functions_registered:
+            raise RuntimeError("Cannot add middleware after function registration")
 
-    def request(self, request):
-        if request.function not in self.__function.keys():
-            raise Exception('function not found')
-        all_middleware = list()
-        for middleware in self.__middleware['']:
-            all_middleware.append(middleware)
-        req_func = self.__function[request.function]
-        if req_func.tags is not None:
-            for tag in req_func.tags:
-                for middleware in self.__middleware[tag]:
-                    all_middleware.append(middleware)
-        all_middleware.sort(key=lambda mid: mid.weight, reverse=True)
-        for middleware in all_middleware:
-            if middleware.type != MiddlewareType.Request:
-                continue
-            new_request = middleware.func(request)
-            if new_request is not None:
-                request = new_request
-        request.response = req_func.f(**request.args)
-        for middleware in all_middleware:
-            if middleware.type != MiddlewareType.Response:
-                continue
-            new_response = middleware.func(request.response)
-            if new_response is not None:
-                request.response = new_response
+        key = middleware.tag or None
+        self._middleware.setdefault(key, []).append(middleware)
+        self._middleware[key].sort(key=lambda m: -m.weight)
 
-    def function(self, name: str, tags: list = None):
-        def decorator(f):
-            self.__registered_function = True
-            self.__function[name] = _ModuleFunction(f=f, tags=tags)
-            return f
+    def request(self, request: 'APIRequest') -> None:
+        if request.function not in self._functions:
+            raise KeyError(f"Function {request.function} not found")
+
+            # Collect relevant middleware
+        relevant_middleware = self._middleware[None].copy()
+        function_tags = self._functions[request.function].tags or []
+        for tag in function_tags:
+            relevant_middleware.extend(self._middleware.get(tag, []))
+
+        # Process request middleware
+        current_request = request
+        for mw in sorted(relevant_middleware,
+                         key=lambda m: m.weight, reverse=True):
+            if mw.m_type == MiddlewareType.Request:
+                if result := mw.func(current_request):
+                    current_request = result
+
+        # Execute function
+        func = self._functions[request.function].func
+        response_data = func(**current_request.args)
+
+        # Process response middleware
+        current_response = response_data
+        for mw in sorted(relevant_middleware,
+                         key=lambda m: m.weight, reverse=True):
+            if mw.m_type == MiddlewareType.Response:
+                if result := mw.func(current_response):
+                    current_response = result
+
+        request.response = current_response
+
+    def function(self, name: str, tags: Optional[List[str]] = None):
+
+        def decorator(func: Callable):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            self._functions_registered = True
+            self._functions[name] = ModuleFunction(wrapper, tags)
+            return wrapper
 
         return decorator
 
 
-class _ModuleFunction:
-    f = Callable
-    tags = list
+class APIRequest:
 
-    def __init__(self, f: Callable, tags: list = None):
-        self.f = f
-        self.tags = tags
+    def __init__(self, data: Dict[str, Any]):
+        self._validate(data)
+        self.module_name = data['module']
+        self.function = data['function']
+        self.args = data.get('args', {})
+        self.response: Optional[APIResponse] = None
+
+    @staticmethod
+    def _validate(data: Dict[str, Any]):
+        """Validate request structure"""
+        required = {'module', 'function'}
+        if not required.issubset(data.keys()):
+            raise ValueError("Invalid request structure")
 
 
-class Error(BaseException):
-    code = int
-    message = str
+@dataclass
+class APIError(Exception):
+    code: int = 0
+    message: str = ""
 
-    def __init__(self, code: int = 0, msg: str = ''):
-        self.code = code
-        self.message = msg
+    def to_dict(self) -> Dict[str, Any]:
+        return {"code": self.code, "message": self.message}
 
 
-class Response:
-    data = dict
-    error = Error
-
-    def __init__(self, data: (dict, list) = None, error: Error = None) -> None:
-        if data is None:
-            self.data = dict()
-        else:
-            self.data = data
-        if error is None:
-            self.error = Error()
-        else:
-            self.error = error
+@dataclass
+class APIResponse:
+    data: Union[Dict, List] = field(default_factory=dict)
+    error: APIError = field(default_factory=APIError)
 
     @property
-    def response(self) -> str:
-        return json.dumps(dict(data=self.data, error=self.error), cls=ResponseEncoder)
+    def formatted(self) -> Dict[str, Any]:
+        return {
+            "data": self.data,
+            "error": self.error.to_dict()
+        }
 
 
-class Request:
-    module = Module
-    function = str
-    args = dict
-    response = Response
-
-    def __init__(self, req: dict):
-        if 'module' not in req.keys() or 'function' not in req.keys() or 'args' not in req.keys():
-            raise Exception('wrong request arguments')
-        self.module = App.get_instance().get_module(req['module'])
-        self.function = req['function']
-        self.args = req['args']
-        self.module.request(self)
-
-
-class ResponseEncoder(json.JSONEncoder):
+class EnhancedJSONEncoder(json.JSONEncoder):
 
     def default(self, o: Any) -> Any:
-        if isinstance(o, Error):
-            return dict(code=o.code, msg=o.message)
-        return json.JSONEncoder.default(self, o)
+        if isinstance(o, APIError):
+            return o.to_dict()
+        if isinstance(o, (APIResponse, Module, Middleware)):
+            return vars(o)
+        return super().default(o)
 
 
 class App(Flask):
-    __instance = None
-    __modules = dict
+    _instance: ClassVar[Optional['App']] = None
+    _initialized: bool = False
 
     def __init__(self, name: str = 'lazy_flask', endpoint: str = '/query'):
-        super().__init__(name)
-        self.__modules = dict()
-        self.__instance.add_url_rule(endpoint, None, App.query, methods=['POST'])
+        if not self._initialized:
+            super().__init__(name)
+            self.modules: Dict[str, Module] = {}
+            self.add_url_rule(endpoint, 'api', self.handle_request, methods=['POST'])
+            self.json_encoder = EnhancedJSONEncoder
+            self._initialized = True
 
     def __new__(cls, *args, **kwargs):
-        if not cls.__instance:
-            cls.__instance = super().__new__(cls, *args, **kwargs)
-        return cls.__instance
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def register_module(self, module: Module) -> None:
-        self.__modules[module.name] = module
+        if module.name in self.modules:
+            raise ValueError(f"Module {module.name} already registered")
+        self.modules[module.name] = module
 
-    def get_module(self, name: str) -> Module:
-        if name not in self.__modules.keys():
-            raise Exception('{} not in modules'.format(name))
-        return self.__modules[name]
-
-    @staticmethod
-    def query():
+    def handle_request(self) -> FlaskResponse:
         try:
-            req = Request(flask_request.json)
-            return req.response.response
-        except Error as e:
-            return Response(error=e).response
+            request_data = flask_request.get_json()
+            request = APIRequest(request_data)
 
-    @staticmethod
-    def get_instance():
-        return App.__instance
+            if request.module_name not in self.modules:
+                raise KeyError(f"Module {request.module_name} not found")
+
+            module = self.modules[request.module_name]
+            module.request(request)
+
+            return FlaskResponse(
+                response=json.dumps(request.response.formatted, cls=self.json_encoder),
+                status=200,
+                mimetype='application/json'
+            )
+        except APIError as e:
+            return FlaskResponse(
+                response=json.dumps(APIResponse(error=e).formatted),
+                status=200,
+                mimetype='application/json'
+            )
+        except Exception as e:
+            error = APIError(code=500, message=str(e))
+            return FlaskResponse(
+                response=json.dumps(APIResponse(error=error).formatted),
+                status=500,
+                mimetype='application/json'
+            )

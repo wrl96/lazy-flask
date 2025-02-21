@@ -25,7 +25,7 @@ app = App(name='lazy_flask', endpoint='/query')
 from lazy_flask import App, Module
 
 module = Module('module')
-App.get_instance().register_module(module)
+app.register_module(module)
 ```
 Module
 
@@ -41,15 +41,15 @@ register_module
 
 #### 注册函数
 ```python
-from lazy_flask import App, Module, Response, Error
+from lazy_flask import App, Module, APIResponse, APIError
 
 @module.function('hello')
-def hello(name: str = '') -> Response:
-    return Response(data={'hello': name})
+def hello(name: str = '') -> APIResponse:
+    return APIResponse(data={'hello': name})
 
 @module.function('oh')
-def oh() -> Response:
-    return Response(error=Error(code=1, msg='This is an error.'))
+def oh() -> APIResponse:
+    return APIResponse(error=APIError(code=1, message='This is an error.'))
 ```
 function
 
@@ -57,19 +57,19 @@ function
 |---|---|---|---|
 |name|str| |函数名称，同一模块内不可重复|
 
-Response
+APIResponse
 
-|参数|类型|默认值|备注|
-|---|---|---|---|
-|data|dict|{}|返回的数据|
-|error|Error|Error()|错误信息|
+|参数|类型| 默认值        |备注|
+|---|---|------------|---|
+|data|dict| {}         |返回的数据|
+|error|Error| APIError() |错误信息|
 
-Error
+APIError
 
-|参数|类型|默认值|备注|
-|---|---|---|---|
-|code|int|0|错误码|
-|msg|str| |错误提示|
+| 参数      |类型|默认值|备注|
+|---------|---|---|---|
+| code    |int|0|错误码|
+| message |str| |错误提示|
 
 #### 发起请求
 
@@ -108,44 +108,44 @@ from lazy_flask import *
 from flask import request as flask_request
 
 info = Module('info')
-App.get_instance().register_module(info)
+app.register_module(info)
 
 # 检查request，只有tag含有login时执行
-def login_middleware(request: Request):
+def login_middleware(request: APIRequest):
     user_id = request.args.get('id', None)
     if user_id is None:
-        raise Error(code=1, msg='User id is none')
+        raise APIError(code=1, message='User id is none')
     token = flask_request.headers.get('Authorization', None)
     if token is None:
-        raise Error(code=2, msg='Token is none')
+        raise APIError(code=2, message='Token is none')
 
-info.register_middleware(Middleware(login_middleware, tag='login', weight=1, type=MiddlewareType.Request))
+info.register_middleware(Middleware(login_middleware, tag='login', weight=1, m_type=MiddlewareType.Request))
 
 # 修改response，全局执行
-def add_timestamp_middleware(response: Response) -> Response:
+def add_timestamp_middleware(response: APIResponse) -> APIResponse:
     response['timestamp'] = int(time.time() * 1000)
     return response
 
-info.register_middleware(Middleware(add_timestamp_middleware, type=MiddlewareType.Response))
+info.register_middleware(Middleware(add_timestamp_middleware, m_type=MiddlewareType.Response))
 
 @info.function('info', tags=['login'])
 def info():
-    return Response(data={'result': 'ok'})
+    return APIResponse(data={'result': 'ok'})
 ```
 
 Middleware
 
-|参数|类型|默认值|备注|
-|---|---|---|---|
-|function|Callable| |中间件处理函数，需要接收Request或Response|
-|tag|str| |标签，设置后需要在装饰器中显式指定相同的标签才会执行，否则全局执行|
-|weight|int|1|优先级，越大越早执行|
-|type|MiddlewareType|MiddlewareType.Request|中间件类型，表示是请求中间件还是响应中间件|
+| 参数       |类型|默认值|备注|
+|----------|---|---|---|
+| function |Callable| |中间件处理函数，需要接收Request或Response|
+| tag      |str| |标签，设置后需要在装饰器中显式指定相同的标签才会执行，否则全局执行|
+| weight   |int|1|优先级，越大越早执行|
+| m_type   |MiddlewareType|MiddlewareType.Request|中间件类型，表示是请求中间件还是响应中间件|
 
 ## Demo
 
 ```python
-pip3 install dist/lazy_flask-0.0.1.tar.gz
+pip3 install dist/lazy_flask-0.1.0.tar.gz
 pip3 install requests
 
 python3 example/app.py

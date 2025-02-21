@@ -9,7 +9,7 @@ requires = [
 
 setuptools.setup(
     name="lazy_flask",
-    version="0.0.1",
+    version="0.1.0",
     author="wrl96",
     author_email="ruilin.wang96@gmail.com",
     description="A simple function framework on flask for lazy developers",
@@ -23,4 +23,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    python_requires=">=3.8",
 )
