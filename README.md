@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/lazy_flask.svg)](https://pypi.org/project/lazy_flask/)
 [![License](https://img.shields.io/github/license/wrl96/lazy_flask.svg)](./LICENSE)
 
-English | [中文文档](docs/README_zh.md) | [Contributing Guide](./CONTRIBUTING.md) | [Code of Conduct](./CODE_OF_CONDUCT.md)
+English | [中文文档](docs/README_zh.md) | [Contributing Guide](docs/CONTRIBUTING.md)
 
 ## Introduction
 
