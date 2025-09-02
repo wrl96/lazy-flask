@@ -5,38 +5,38 @@
 [![PyPI](https://img.shields.io/pypi/v/lazy_flask.svg)](https://pypi.org/project/lazy_flask/)
 [![License](https://img.shields.io/github/license/wrl96/lazy_flask.svg)](./LICENSE)
 
-English | [中文文档](./README_zh.md)
+中文 | [English](./README.md)
 
-## Introduction
+## 项目简介
 
-`lazy_flask` is a lightweight toolkit that simplifies the Flask development process, helping you quickly build Python web applications.
+`lazy_flask` 是一个简化 Flask 开发流程的工具包，帮助你更快速地构建 Python Web 应用。
 
-Features:
+特性：
 
-- Based on Flask, fully compatible with all Flask features
-- Very small codebase (<200 lines)
-- Supports custom middleware
+- 基于Flask二次封装，支持所有Flask特性
+- 代码量小，仅不到200行
+- 支持插入自定义中间件
 
-## Installation
+## 安装
 
 ```bash
 pip install lazy_flask
 ```
 
-## Quick Start
+## 快速开始
 
-#### Initialize
+#### 初始化
 ```python
 from lazy_flask import App
 
 app = App(name='lazy_flask', endpoint='/query')
 ```
-|Parameter|Type|Default|Description|
+|参数|类型|默认值|备注|
 |---|---|---|---|
-|name|str|lazy_flask|Flask app name|
-|endpoint|str|/query|Interaction endpoint|
+|name|str|lazy_flask|flask应用名称，随意|
+|endpoint|str|/query|交互端点|
 
-#### Register Module
+#### 注册模块
 ```python
 from lazy_flask import App, Module
 
@@ -45,17 +45,17 @@ app.register_module(module)
 ```
 Module
 
-|Parameter|Type|Default|Description|
+|参数|类型|默认值|备注|
 |---|---|---|---|
-|name|str| |Module name, must be unique|
+|name|str| |模块名称，不可重复|
 
 register_module
 
-|Parameter|Type|Default|Description|
+|参数|类型|默认值|备注|
 |---|---|---|---|
-|module|Module| |Register the module to App|
+|module|Module| |向App注册该模块|
 
-#### Register Function
+#### 注册函数
 ```python
 from lazy_flask import App, Module, APIResponse, APIError
 
@@ -69,25 +69,25 @@ def oh() -> APIResponse:
 ```
 function
 
-|Parameter|Type|Default|Description|
+|参数|类型|默认值|备注|
 |---|---|---|---|
-|name|str| |Function name, must be unique in the same module|
+|name|str| |函数名称，同一模块内不可重复|
 
 APIResponse
 
-|Parameter|Type|Default|Description|
-|---|---|---|---|
-|data|dict|{}|Returned data|
-|error|APIError|APIError()|Error information|
+|参数|类型| 默认值        |备注|
+|---|---|------------|---|
+|data|dict| {}         |返回的数据|
+|error|APIError| APIError() |错误信息|
 
 APIError
 
-|Parameter|Type|Default|Description|
-|---|---|---|---|
-|code|int|0|Error code|
-|message|str| |Error message|
+| 参数      |类型|默认值|备注|
+|---------|---|---|---|
+| code    |int|0|错误码|
+| message |str| |错误提示|
 
-#### Make a Request
+#### 发起请求
 
 ```python
 import requests
@@ -107,15 +107,16 @@ response = requests.request("POST", url, json=data)
 print(response.text) # {"data": {"hello": "world"}, "error": {"code": 0, "msg": ""}}
 ```
 
-## Advanced Usage
+## 高级用法
 
-#### Middleware
+#### 中间件
 
-Middleware can intercept requests and responses. For example, you can do permission checks or modify responses before returning.<br>
-Just define a function that accepts a `Request` or `Response`. If you modify it, return the new object. If not, lazy_flask will continue with the original.
+中间件可以拦截请求，在请求到达处理函数之前/返回请求结果之前做一些事情，例如权限校验<br>
+你只需要定义一个函数，接收Request/Response参数即可获取相应的值<br>
+如果你想修改请求/响应，请在中间件函数中修改，并返回新的request/response，如果不返回，lazy_flask将继续使用传入的值
 
 ```python
-# Permission check
+# 权限校验
 import time
 
 from lazy_flask import *
@@ -124,7 +125,7 @@ from flask import request as flask_request
 info = Module('info')
 app.register_module(info)
 
-# Check request, only executed when tag contains 'login'
+# 检查request，只有tag含有login时执行
 def login_middleware(request: APIRequest):
     user_id = request.args.get('id', None)
     if user_id is None:
@@ -135,7 +136,7 @@ def login_middleware(request: APIRequest):
 
 info.register_middleware(Middleware(login_middleware, tag='login', weight=1, m_type=MiddlewareType.Request))
 
-# Modify response, executed globally
+# 修改response，全局执行
 def add_timestamp_middleware(response: APIResponse) -> APIResponse:
     response['timestamp'] = int(time.time() * 1000)
     return response
@@ -149,12 +150,12 @@ def info():
 
 Middleware
 
-|Parameter|Type|Default|Description|
-|---|---|---|---|
-|function|Callable| |Middleware handler, must accept Request or Response|
-|tag|str| |If set, only runs when decorator specifies the same tag, otherwise global|
-|weight|int|1|Priority, larger runs earlier|
-|m_type|MiddlewareType|MiddlewareType.Request|Middleware type (Request or Response)|
+| 参数       |类型|默认值|备注|
+|----------|---|---|---|
+| function |Callable| |中间件处理函数，需要接收Request或Response|
+| tag      |str| |标签，设置后需要在装饰器中显式指定相同的标签才会执行，否则全局执行|
+| weight   |int|1|优先级，越大越早执行|
+| m_type   |MiddlewareType|MiddlewareType.Request|中间件类型，表示是请求中间件还是响应中间件|
 
 ## Demo
 
@@ -163,5 +164,5 @@ pip3 install lazy_flask
 pip3 install requests
 
 python3 example/app.py
-python3 example/req.py # run in another terminal
+python3 example/req.py # 新开一个终端
 ```
