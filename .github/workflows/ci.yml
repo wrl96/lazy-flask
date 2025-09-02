@@ -49,7 +49,6 @@ jobs:
         if: ${{ !env.ACT && !startsWith(runner.name, 'Act') }}
         uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           name: coverage-report
           path: coverage.xml
           if-no-files-found: error
@@ -57,8 +56,9 @@ jobs:
       # 仅在 GitHub 上上传到 Codecov（本地 act 跳过）
       - name: Upload to Codecov
         if: ${{ !env.ACT && !startsWith(runner.name, 'Act') }}
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
           flags: unittests
           fail_ci_if_error: true
