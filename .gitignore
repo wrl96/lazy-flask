@@ -5,3 +5,6 @@ html*
 **/.DS_Store
 **/__pycache__
 .coverage
+.env
+build
+.act_cache
