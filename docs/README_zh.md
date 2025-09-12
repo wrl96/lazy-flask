@@ -95,8 +95,8 @@ import requests
 url = "http://{host}/query"
 
 data = {
-    "module": "module", 
-    "function": "hello", 
+    "module": "module",
+    "function": "hello",
     "args": {
         "name": "world"
     }

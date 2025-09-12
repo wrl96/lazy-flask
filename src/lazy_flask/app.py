@@ -28,6 +28,8 @@ class App(Flask, LazyApp):
 
             module = self.get_module(request.module_name)
             module.request(request)
+            if request.response is None:
+                request.response = APIResponse()
 
             return FlaskResponse(
                 response=json.dumps(request.response.formatted, cls=self.json_encoder),
