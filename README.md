@@ -133,7 +133,7 @@ def login_middleware(request: APIRequest):
     if token is None:
         raise APIError(code=2, message='Token is none')
 
-info.register_middleware(Middleware(login_middleware, tag='login', weight=1, m_type=MiddlewareType.Request))
+info.register_middleware(Middleware(login_middleware, tag='login', priority=1, m_type=MiddlewareType.Request))
 
 # Modify response, executed globally
 def add_timestamp_middleware(response: APIResponse) -> APIResponse:
@@ -149,12 +149,12 @@ def info():
 
 Middleware
 
-|Parameter|Type|Default|Description|
-|---|---|---|---|
-|function|Callable| |Middleware handler, must accept Request or Response|
-|tag|str| |If set, only runs when decorator specifies the same tag, otherwise global|
-|weight|int|1|Priority, larger runs earlier|
-|m_type|MiddlewareType|MiddlewareType.Request|Middleware type (Request or Response)|
+| Parameter |Type|Default|Description|
+|-----------|---|---|---|
+| function  |Callable| |Middleware handler, must accept Request or Response|
+| tag       |str| |If set, only runs when decorator specifies the same tag, otherwise global|
+| priority  |int|1|Priority, larger runs earlier|
+| m_type    |MiddlewareType|MiddlewareType.Request|Middleware type (Request or Response)|
 
 ## Demo
 

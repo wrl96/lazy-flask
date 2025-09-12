@@ -8,146 +8,110 @@ on:
     branches: [ master ]
 
 jobs:
-  build-test-coverage:
+  lint-test-coverage:
     runs-on: ubuntu-latest
-    container: python:3.10
+    strategy:
+      matrix:
+        flask-version: ['1.1.4', '2.3.3', '3.1.2']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # 仅在 GitHub（非 act）环境安装 Node 20，给 JS Actions 用
-      - name: Install Node.js 20 (only on GitHub)
-        if: ${{ !env.ACT && !startsWith(runner.name, 'Act') }}
+      - name: Install Poetry
         run: |
-          apt-get update
-          apt-get install -y curl ca-certificates gnupg
-          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-          apt-get install -y nodejs
-          node -v
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          poetry --version
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+          cache: 'poetry'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install .
-          pip install coverage
+          pip install flask==${{ matrix.flask-version }}
+          poetry install --no-interaction
 
-      - name: Run tests with coverage
-        run: |
-          coverage run -m unittest discover -s tests
-          coverage report
-          coverage xml
-
-      # act 本地：保存覆盖率报告到仓库目录
-      - name: Save coverage report locally (act)
-        if: ${{ env.ACT || startsWith(runner.name, 'Act') }}
-        run: |
-          mkdir -p artifacts/coverage-report
-          cp coverage.xml artifacts/coverage-report/
-
-      # GitHub：上传覆盖率报告（需要 Node）
-      - name: Upload coverage report
-        if: ${{ !env.ACT && !startsWith(runner.name, 'Act') }}
-        uses: actions/upload-artifact@v4
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
         with:
-          name: coverage-report
-          path: coverage.xml
-          if-no-files-found: error
+          extra_args: --all-files
 
-      # 仅在 GitHub 上上传到 Codecov（本地 act 跳过）
-      - name: Upload to Codecov
-        if: ${{ !env.ACT && !startsWith(runner.name, 'Act') }}
+      - name: Run tests with coverage (pytest-cov)
+        run: poetry run pytest
+
+      - name: Upload coverage to Codecov
+        if: matrix.flask-version == '3.1.2'
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
-          flags: unittests
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   build-package:
     runs-on: ubuntu-latest
-    needs: build-test-coverage
-    container: python:3.10
+    needs: lint-test-coverage
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 仅在 GitHub 安装 Node 20，供 upload-artifact 使用
-      - name: Install Node.js 20 (only on GitHub)
-        if: ${{ !env.ACT && !startsWith(runner.name, 'Act') }}
+      - name: Install Poetry
         run: |
-          apt-get update
-          apt-get install -y curl ca-certificates gnupg
-          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-          apt-get install -y nodejs
-          node -v
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          poetry --version
 
-      - name: Install build tools & deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install wheel twine
-          pip install .
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+          cache: 'poetry'
 
-      - name: Clean dist
-        run: rm -rf dist build *.egg-info
+      - name: Install dependencies
+        run: poetry install --no-interaction
 
       - name: Build package
-        run: python setup.py sdist bdist_wheel
-        # 亦可用更现代方案：
-        # run: |
-        #   python -m pip install build
-        #   python -m build
+        run: poetry build
 
-      # act 本地：保存 dist 全量到仓库目录
-      - name: Save dist locally (act)
-        if: ${{ env.ACT || startsWith(runner.name, 'Act') }}
+      - name: Twine check
         run: |
-          mkdir -p artifacts/lazy_flask-dist
-          cp -r dist/* artifacts/lazy_flask-dist/
+          python -m pip install -U twine
+          twine check dist/*
 
-      # GitHub：上传整个 dist 目录（包含 .tar.gz 与 .whl）
       - name: Upload dist package
-        if: ${{ !env.ACT && !startsWith(runner.name, 'Act') }}
         uses: actions/upload-artifact@v4
         with:
-          name: lazy_flask-dist
+          name: lazy-flask-dist
           path: dist/
           if-no-files-found: error
 
   publish:
-    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: build-package
-    container: python:3.10
-    # 仅打 tag 时发布
-    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/lazy-core/
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 仅在 GitHub 安装 Node 20，供 download-artifact 使用
-      - name: Install Node.js 20 (only on GitHub)
-        if: ${{ !env.ACT && !startsWith(runner.name, 'Act') }}
-        run: |
-          apt-get update
-          apt-get install -y curl ca-certificates gnupg
-          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-          apt-get install -y nodejs
-          node -v
-
-      - name: Install Twine
-        run: |
-          python -m pip install --upgrade pip
-          pip install twine
-
-      - name: Download dist package
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: lazy_flask-dist
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: lazy-core-dist
           path: dist
 
-      - name: Publish to PyPI
-        env:
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          python -m twine upload --username __token__ --password "$TWINE_PASSWORD" dist/*
+      - name: Publish to PyPI (Trusted Publisher)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # with:
+        #   skip-existing: true
+        #   print-hash: true

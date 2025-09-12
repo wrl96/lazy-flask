@@ -1,10 +1,6 @@
-venv*
-html*
-.idea
-.DS_Store
-**/.DS_Store
-**/__pycache__
+.venv
+.poetry
+dist
+htmlcov
 .coverage
-.env
-build
-.act_cache
+*.xml

@@ -1,0 +1,59 @@
+[project]
+name = "lazy-flask"
+dynamic = ["version"]
+description = "A lightweight toolkit that simplifies the Flask development process, helping you quickly build Python web applications."
+authors = [
+    {name = "wrl96",email = "ruilin.wang96@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [{ include = "lazy_flask", from = "src" }]
+include = [
+  { path = "src/lazy_core/py.typed", format = "wheel" },
+  { path = "src/lazy_core/py.typed", format = "sdist" }
+]
+version = "0.1.0"
+
+[tool.poetry.requires-plugins]
+poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "pep440"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.13.0"
+mypy = "^1.18.1"
+pytest = "^8.4.2"
+pytest-cov = "^7.0.0"
+pre-commit = "^4.3.0"
+
+[tool.poetry.dependencies]
+pydantic = "^2.11.7"
+flask = ">=1.0.0"
+lazy-core = "==0.1.2"
+
+[tool.pytest.ini_options]
+addopts = "-q --cov=lazy_flask --cov-branch --cov-report=xml --cov-report=term-missing --cov-fail-under=90"
+
+[tool.coverage.run]
+branch = true
+source = ["lazy_flask"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+fail_under = 90
+
+[tool.mypy]
+python_version = "3.13"
+mypy_path = ["src"]
+plugins = ["pydantic.mypy"]
+

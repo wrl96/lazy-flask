@@ -1,4 +1,4 @@
-# lazy_flask
+# Lazy-Flask
 
 [![CI](https://github.com/wrl96/lazy_flask/actions/workflows/ci.yml/badge.svg)](https://github.com/wrl96/lazy_flask/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/wrl96/lazy_flask/branch/master/graph/badge.svg)](https://codecov.io/gh/wrl96/lazy_flask)
@@ -9,7 +9,7 @@
 
 ## 项目简介
 
-`lazy_flask` 是一个简化 Flask 开发流程的工具包，帮助你更快速地构建 Python Web 应用。
+`Lazy-Flask` 是一个简化 Flask 开发流程的工具包，帮助你更快速地构建 Python Web 应用。
 
 特性：
 
@@ -20,7 +20,7 @@
 ## 安装
 
 ```bash
-pip install lazy_flask
+pip install lazy-flask
 ```
 
 ## 快速开始
@@ -134,7 +134,7 @@ def login_middleware(request: APIRequest):
     if token is None:
         raise APIError(code=2, message='Token is none')
 
-info.register_middleware(Middleware(login_middleware, tag='login', weight=1, m_type=MiddlewareType.Request))
+info.register_middleware(Middleware(login_middleware, tag='login', priority=1, m_type=MiddlewareType.Request))
 
 # 修改response，全局执行
 def add_timestamp_middleware(response: APIResponse) -> APIResponse:
@@ -154,7 +154,7 @@ Middleware
 |----------|---|---|---|
 | function |Callable| |中间件处理函数，需要接收Request或Response|
 | tag      |str| |标签，设置后需要在装饰器中显式指定相同的标签才会执行，否则全局执行|
-| weight   |int|1|优先级，越大越早执行|
+| priority |int|1|优先级，越大越早执行|
 | m_type   |MiddlewareType|MiddlewareType.Request|中间件类型，表示是请求中间件还是响应中间件|
 
 ## Demo

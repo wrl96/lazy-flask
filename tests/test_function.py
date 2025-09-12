@@ -1,97 +1,82 @@
-import json
-import unittest
-from lazy_flask import *
+import pytest
+from lazy_flask import (
+    Module,
+    Middleware,
+    MiddlewareType,
+    App,
+    APIResponse,
+    APIException,
+    APIError,
+)
 
 
-class TestAPIClass(unittest.TestCase):
-
-    def test_api_request(self):
-        data = {'module': 'math', 'function': 'add'}
-        req = APIRequest(data)
-        self.assertEqual(req.module_name, 'math')
-        data = {'module': 'math'}
-        with self.assertRaises(ValueError):
-            APIRequest(data)
-
-    def test_api_response(self):
-        response = APIResponse(data={'key': 'value'})
-        self.assertIn('key', response.formatted['data'])
+@pytest.fixture(autouse=True)
+def setup_app():
+    app = App()
+    client = app.test_client()
+    return app, client
 
 
-class TestLazyFlask(unittest.TestCase):
+def test_request_processing_flow(setup_app):
+    app, client = setup_app
+    middleware = Middleware(func=lambda req: req, priority=1, tag="test")
+    resp_middleware = Middleware(func=lambda resp: resp, m_type=MiddlewareType.Response)
+    module = Module("test")
+    module.register_middleware(middleware)
+    module.register_middleware(resp_middleware)
 
-    def setUp(self):
-        # 初始化应用和模块
-        self.app = App()
-        self.client = self.app.test_client()
+    @module.function("demo", tags=["test"])
+    def demo_func():
+        return APIResponse(data={"result": "ok"})
 
-    def test_request_processing_flow(self):
-        # 注册测试模块
-        self.middleware = Middleware(func=lambda req: req, weight=1, tag='test')
-        self.resp_middleware = Middleware(func=lambda resp: resp, m_type=MiddlewareType.Response)
-        self.module = Module('test')
-        self.module.register_middleware(self.middleware)
-        self.module.register_middleware(self.resp_middleware)
-
-        @self.module.function('demo', tags=['test'])
-        def demo_func():
-            return APIResponse(data={'result': 'ok'})
-
-        self.app.register_module(self.module)
-        # 测试完整的请求处理流程
-        response = self.client.post('/query', json={
-            'module': 'test',
-            'function': 'demo'
-        })
-        self.assertEqual(response.status_code, 200)
-
-    def test_request_processing_flow_error(self):
-        self.module = Module('test_error')
-
-        @self.module.function('demo')
-        def demo_func():
-            raise APIError(code=1, message='Error!')
-        self.app.register_module(self.module)
-        response = self.client.post('/query', json={
-            'module': 'test_error',
-            'function': 'demo'
-        })
-        self.assertEqual(response.status_code, 200)
-
-    def test_register_duplicate_module(self):
-        # 测试重复注册模块
-        self.module = Module('duplicate_module')
-        self.app.register_module(self.module)
-        with self.assertRaises(ValueError):
-            self.app.register_module(self.module)
-
-    def test_register_duplicate_middleware(self):
-        # 测试重复注册中间件
-        self.module = Module('duplicate_middleware')
-        self.middleware = Middleware(func=lambda req: req, weight=1)
-        self.module.register_middleware(self.middleware)
-
-        @self.module.function('demo')
-        def demo_func():
-            return APIResponse(data={'result': 'ok'})
-
-        with self.assertRaises(RuntimeError):
-            self.module.register_middleware(self.middleware)
-
-    def test_request_function(self):
-        self.module = Module('test_request')
-        self.app.register_module(self.module)
-        response = self.client.post('/query', json={
-            'module': 'test_request_1',
-            'function': 'demo'
-        })
-        self.assertEqual(response.status_code, 500)
-        response = self.client.post('/query', json={
-            'module': 'test_request',
-            'function': 'demo1'
-        })
-        self.assertEqual(response.status_code, 500)
+    app.register_module(module)
+    response = client.post("/query", json={"module": "test", "function": "demo"})
+    assert response.status_code == 200
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_request_processing_flow_error(setup_app):
+    app, client = setup_app
+    module = Module("test_error")
+
+    @module.function("demo")
+    def demo_func():
+        raise APIException(error=APIError(code=1, message="Error!"))
+
+    app.register_module(module)
+    response = client.post("/query", json={"module": "test_error", "function": "demo"})
+    assert response.status_code == 200
+
+
+def test_register_duplicate_module(setup_app):
+    app, _ = setup_app
+    module = Module("duplicate_module")
+    app.register_module(module)
+    with pytest.raises(ValueError):
+        app.register_module(module)
+
+
+def test_register_duplicate_middleware():
+    module = Module("duplicate_middleware")
+    middleware = Middleware(func=lambda req: req, priority=1)
+    module.register_middleware(middleware)
+
+    @module.function("demo")
+    def demo_func():
+        return APIResponse(data={"result": "ok"})
+
+    with pytest.raises(RuntimeError):
+        module.register_middleware(middleware)
+
+
+def test_request_function(setup_app):
+    app, client = setup_app
+    module = Module("test_request")
+    app.register_module(module)
+    response = client.post(
+        "/query", json={"module": "test_request_1", "function": "demo"}
+    )
+    assert response.status_code == 500
+    response = client.post(
+        "/query", json={"module": "test_request", "function": "demo1"}
+    )
+    assert response.status_code == 500

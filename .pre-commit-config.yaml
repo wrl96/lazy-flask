@@ -1,0 +1,43 @@
+exclude: |
+  ^dist/|^build/|^.venv/|^\.mypy_cache/|^\.ruff_cache/|^htmlcov/|^docs/_site/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-toml
+      - id: check-yaml
+
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff (poetry)
+        entry: poetry run ruff check --fix
+        language: system
+        types: [python]
+
+      - id: ruff-format
+        name: ruff-format (poetry)
+        entry: poetry run ruff format
+        language: system
+        types: [python]
+
+      - id: mypy
+        name: mypy (poetry)
+        entry: poetry run mypy
+        language: system
+        pass_filenames: false
+        types: [python]
+        args:
+          - src
+          - --config-file=pyproject.toml
+        files: ^src/lazy_flask/
+
+      - id: pytest
+        name: pytest (pre-push via poetry)
+        entry: poetry run pytest
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
