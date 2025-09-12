@@ -1,4 +1,4 @@
-# lazy_flask
+# Lazy-Flask
 
 [![CI](https://github.com/wrl96/lazy-flask/actions/workflows/ci.yml/badge.svg)](https://github.com/wrl96/lazy-flask/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/wrl96/lazy-flask/branch/master/graph/badge.svg)](https://codecov.io/gh/wrl96/lazy-flask)
@@ -9,7 +9,7 @@ English | [中文文档](docs/README_zh.md) | [Contributing Guide](docs/CONTRIBU
 
 ## Introduction
 
-`lazy_flask` is a lightweight toolkit that simplifies the Flask development process, helping you quickly build Python web applications.
+`Lazy_Flask` is a lightweight toolkit that simplifies the Flask development process, helping you quickly build Python web applications.
 
 Features:
 
