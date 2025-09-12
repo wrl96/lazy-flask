@@ -1,9 +1,9 @@
 # Lazy-Flask
 
-[![CI](https://github.com/wrl96/lazy_flask/actions/workflows/ci.yml/badge.svg)](https://github.com/wrl96/lazy_flask/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/wrl96/lazy_flask/branch/master/graph/badge.svg)](https://codecov.io/gh/wrl96/lazy_flask)
-[![PyPI](https://img.shields.io/pypi/v/lazy_flask.svg)](https://pypi.org/project/lazy_flask/)
-[![License](https://img.shields.io/github/license/wrl96/lazy_flask.svg)](../LICENSE)
+[![CI](https://github.com/wrl96/lazy-flask/actions/workflows/ci.yml/badge.svg)](https://github.com/wrl96/lazy-flask/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/wrl96/lazy-flask/branch/master/graph/badge.svg)](https://codecov.io/gh/wrl96/lazy-flask)
+[![PyPI](https://img.shields.io/pypi/v/lazy-flask.svg)](https://pypi.org/project/lazy-flask/)
+[![License](https://img.shields.io/github/license/wrl96/lazy-flask.svg)](./LICENSE)
 
 中文 | [English](../README.md) | [如何贡献代码](./CONTRIBUTING_zh.md) | [行为准则](./CODE_OF_CONDUCT_zh.md)
 

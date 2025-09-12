@@ -1,9 +1,9 @@
 # lazy_flask
 
-[![CI](https://github.com/wrl96/lazy_flask/actions/workflows/ci.yml/badge.svg)](https://github.com/wrl96/lazy_flask/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/wrl96/lazy_flask/branch/master/graph/badge.svg)](https://codecov.io/gh/wrl96/lazy_flask)
-[![PyPI](https://img.shields.io/pypi/v/lazy_flask.svg)](https://pypi.org/project/lazy_flask/)
-[![License](https://img.shields.io/github/license/wrl96/lazy_flask.svg)](./LICENSE)
+[![CI](https://github.com/wrl96/lazy-flask/actions/workflows/ci.yml/badge.svg)](https://github.com/wrl96/lazy-flask/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/wrl96/lazy-flask/branch/master/graph/badge.svg)](https://codecov.io/gh/wrl96/lazy-flask)
+[![PyPI](https://img.shields.io/pypi/v/lazy-flask.svg)](https://pypi.org/project/lazy-flask/)
+[![License](https://img.shields.io/github/license/wrl96/lazy-flask.svg)](./LICENSE)
 
 English | [中文文档](docs/README_zh.md) | [Contributing Guide](docs/CONTRIBUTING.md)
 
