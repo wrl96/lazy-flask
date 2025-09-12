@@ -20,7 +20,7 @@ Features:
 ## Installation
 
 ```bash
-pip install lazy_flask
+pip install lazy-flask
 ```
 
 ## Quick Start
