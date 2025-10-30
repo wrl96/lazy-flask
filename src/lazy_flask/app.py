@@ -23,7 +23,32 @@ class App(Flask, LazyApp):
 
     def handle_request(self) -> FlaskResponse:
         try:
-            request_data = flask_request.get_json()
+            if not flask_request.is_json:
+                error = APIError(
+                    code=400, message="Request content-type must be application/json"
+                )
+                return FlaskResponse(
+                    response=json.dumps(
+                        APIResponse(error=error).formatted,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                    ),
+                    status=400,
+                    mimetype="application/json",
+                )
+
+            request_data = flask_request.get_json(silent=True)
+            if request_data is None or not isinstance(request_data, dict):
+                error = APIError(code=400, message="Invalid JSON body")
+                return FlaskResponse(
+                    response=json.dumps(
+                        APIResponse(error=error).formatted,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                    ),
+                    status=400,
+                    mimetype="application/json",
+                )
             request = APIRequest.from_dict(request_data)
 
             module = self.get_module(request.module_name)
@@ -32,20 +57,38 @@ class App(Flask, LazyApp):
                 request.response = APIResponse()
 
             return FlaskResponse(
-                response=json.dumps(request.response.formatted, cls=self.json_encoder),
+                response=json.dumps(
+                    request.response.formatted,
+                    cls=self.json_encoder,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                ),
                 status=200,
                 mimetype="application/json",
             )
         except APIException as e:
             return FlaskResponse(
-                response=json.dumps(APIResponse(error=e.error).formatted),
+                response=json.dumps(
+                    APIResponse(error=e.error).formatted,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                ),
                 status=200,
                 mimetype="application/json",
             )
         except Exception as e:
             error = APIError(code=500, message=str(e))
             return FlaskResponse(
-                response=json.dumps(APIResponse(error=error).formatted),
+                response=json.dumps(
+                    APIResponse(error=error).formatted,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                ),
                 status=500,
                 mimetype="application/json",
             )
+
+    @classmethod
+    def reset(cls) -> None:
+        cls._instance = None
+        cls._initialized = False

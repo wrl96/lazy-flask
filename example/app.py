@@ -57,4 +57,5 @@ def error():
     return APIResponse(error=APIError(code=1, message="Error!"))
 
 
-app.run(host="0.0.0.0", port=9000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=9000)
