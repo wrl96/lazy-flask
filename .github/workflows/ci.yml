@@ -37,6 +37,12 @@ jobs:
           poetry install --no-interaction
           poetry run pip install -U "flask==${{ matrix.flask-version }}"
 
+      - name: Pin compatibility deps for Flask 1.1.x
+        if: matrix.flask-version == '1.1.4'
+        run: |
+          # Jinja2<3 expects markupsafe.soft_unicode which was removed in MarkupSafe>=2.1
+          poetry run pip install "Jinja2<3.0" "MarkupSafe<2.1"
+
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
         with:
