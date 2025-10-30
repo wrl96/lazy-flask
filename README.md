@@ -9,7 +9,7 @@ English | [中文文档](docs/README_zh.md) | [Contributing Guide](docs/CONTRIBU
 
 ## Introduction
 
-`Lazy_Flask` is a lightweight toolkit that simplifies the Flask development process, helping you quickly build Python web applications.
+Lazy-Flask is a lightweight toolkit that simplifies the Flask development process, helping you quickly build Python web applications.
 
 Features:
 
@@ -112,7 +112,7 @@ print(response.text) # {"data": {"hello": "world"}, "error": {"code": 0, "msg": 
 #### Middleware
 
 Middleware can intercept requests and responses. For example, you can do permission checks or modify responses before returning.<br>
-Just define a function that accepts a `Request` or `Response`. If you modify it, return the new object. If not, lazy_flask will continue with the original.
+Just define a function that accepts a `Request` or `Response`. If you modify it, return the new object. If not, Lazy-Flask will continue with the original.
 
 ```python
 # Permission check
@@ -159,7 +159,7 @@ Middleware
 ## Demo
 
 ```bash
-pip3 install lazy_flask
+pip3 install lazy-flask
 pip3 install requests
 
 python3 example/app.py

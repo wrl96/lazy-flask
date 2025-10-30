@@ -4,3 +4,17 @@ dist
 htmlcov
 .coverage
 *.xml
+# Local & IDE
+.idea/
+.DS_Store
+
+# Envs
+venv_new/
+
+# Caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Reports
+coverage.xml

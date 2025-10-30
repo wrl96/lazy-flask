@@ -113,7 +113,7 @@ print(response.text) # {"data": {"hello": "world"}, "error": {"code": 0, "msg": 
 
 中间件可以拦截请求，在请求到达处理函数之前/返回请求结果之前做一些事情，例如权限校验<br>
 你只需要定义一个函数，接收Request/Response参数即可获取相应的值<br>
-如果你想修改请求/响应，请在中间件函数中修改，并返回新的request/response，如果不返回，lazy_flask将继续使用传入的值
+如果你想修改请求/响应，请在中间件函数中修改，并返回新的request/response，如果不返回，Lazy-Flask 将继续使用传入的值
 
 ```python
 # 权限校验
@@ -160,7 +160,7 @@ Middleware
 ## Demo
 
 ```bash
-pip3 install lazy_flask
+pip3 install lazy-flask
 pip3 install requests
 
 python3 example/app.py

@@ -1,4 +1,4 @@
-# 为 lazy_flask 贡献代码
+# 为 Lazy-Flask 贡献代码
 
 感谢你对本项目的兴趣！🎉
 
@@ -10,8 +10,8 @@
 - 在 GitHub 上 Fork 本仓库到你的账号。
 - 将你的 Fork 克隆到本地：
   ```bash
-  git clone https://github.com/<your-username>/lazy_flask.git
-  cd lazy_flask
+  git clone https://github.com/<your-username>/lazy-flask.git
+  cd lazy-flask
   ```
 
 ### 2. 设置开发环境

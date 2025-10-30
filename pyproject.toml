@@ -15,8 +15,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 packages = [{ include = "lazy_flask", from = "src" }]
 include = [
-  { path = "src/lazy_core/py.typed", format = "wheel" },
-  { path = "src/lazy_core/py.typed", format = "sdist" }
+  { path = "src/lazy_flask/py.typed", format = "wheel" },
+  { path = "src/lazy_flask/py.typed", format = "sdist" }
 ]
 version = "0.1.0"
 

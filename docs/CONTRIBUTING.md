@@ -1,4 +1,4 @@
-# Contributing to lazy_flask
+# Contributing to Lazy-Flask
 
 Thank you for your interest in contributing! 🎉
 
@@ -10,8 +10,8 @@ We welcome contributions of all kinds, including bug fixes, new features, docume
 - Fork this repository to your GitHub account.
 - Clone your fork locally:
   ```bash
-  git clone https://github.com/<your-username>/lazy_flask.git
-  cd lazy_flask
+  git clone https://github.com/<your-username>/lazy-flask.git
+  cd lazy-flask
   ```
 
 ### 2. Set Up Environment
