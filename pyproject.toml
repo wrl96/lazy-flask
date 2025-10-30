@@ -56,3 +56,11 @@ fail_under = 90
 python_version = "3.13"
 mypy_path = ["src"]
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "flask"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "flask.*"
+ignore_missing_imports = true
